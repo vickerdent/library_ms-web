@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content%}
+
+<div class="col-md-6 offset-md-3">
+    <h2>Update Book</h2>
+    <br>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.as_p }}
+        <br>
+        <button type="submit" class="btn btn-secondary">Update Book</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+<!-- Continue here -->
+{% block content%}
+<div class="col-md-6 offset-md-3">
+    <h2>Add Book</h2>
+    <br>
+    <form method="post" action="" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% if form.errors %}
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                Your form has errors:
+                {{ form.non_field_errors }}
+                {% for field in form %}
+                    {% if field.errors %}
+                        {{field.errors}}
+                    {% endif %}
+                {% endfor %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+        {{ form.as_p }}
+        <input type="submit" value="Add Book" class="btn btn-secondary">
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block content%}
+
+
+<div class="card">
+    <div class="card-header">
+        <b>{{ book.name }}</b>
+    </div>
+    <div class="card-body">
+        <p class="card-text"><strong>Description:</strong> {{ book.description }}</p>
+        <p class="card-text"><strong>ISBN:</strong> {{ book.isbn }}</p>
+        <p class="card-text"><strong>Page Count:</strong> {{ book.page_count }}</p>
+        <p class="card-text"><strong>Issued Out:</strong> {{ book.issued_out }}</p>
+        <p class="card-text"><strong>Author:</strong> {{ book.author }}</p>
+        <p class="card-text"><strong>Year Published:</strong> {{ book.year }}</p>
+        <p class="card-text"><strong>Quantity:</strong> {{ book.quantity }}</p>
+        {% if book.series != False %}
+        <p class="card-text"><strong>Name Of Series:</strong> {{ book.name_of_series }}</p>
+        <p class="card-text"><strong>Position In Series:</strong> {{ book.pos_in_series }}</p>
+        {% endif %}
+        <p class="card-text"><strong>Genre:</strong>
+            {% for item in book.genre %}
+            <ul>
+                <li> {{ item }} </li>
+            </ul>
+            {% endfor %}
+        </p>
+    </div>
+</div>
+<br>
+<a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
+{% if staff %}
+    <a href="{% url 'edit_book' book.slug %}" class="btn btn-secondary">Edit Book</a>
+    <a href="{% url 'delete_book' book.slug %}" class="btn btn-secondary">Delete Book</a>
+{% else %}
+    <a href="{% url 'borrow' book.slug %}" class="btn btn-secondary">Borrow Book</a>
+{% endif %}
+
+
+{% endblock %} 

@@ -1,10 +1,13 @@
-from typing import Any
+from typing import Any, Dict, Mapping, Optional, Type, Union
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
+from django.forms.utils import ErrorList
+from .models import RequestBook
 
 class SignUpForm(UserCreationForm):
-    email = forms.CharField(label="", 
+    """Enables users to sign up to the web app."""
+    email = forms.CharField(label="",
                              widget=forms.EmailInput(attrs={"name": "email", "class": "form-control", "placeholder": "E-mail Address"}))
     first_name = forms.CharField(label="", max_length=100, 
                              widget=forms.TextInput(attrs={"name": "first_name", "class": "form-control", "placeholder": "First Name"}))
@@ -37,14 +40,153 @@ class SignUpForm(UserCreationForm):
         self.fields['password2'].label = ''
         self.fields['password2'].help_text = '<span class="form-text text-muted"><small>Enter the same password as before, for verification.</small></span>'	
 
+class BookForm(forms.Form):
+    """Create form using the Book class in model """
 
-# Create Add User Form
-# class EditUserForm(forms.Form):
-#     first_name = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"First Name", "class":"form-control"}), label="")
-#     last_name = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"Last Name", "class":"form-control"}), label="")
-#     email = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"Email", "class":"form-control", "readonly": "True"}), label="")
-#     phone = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"Phone", "class":"form-control"}), label="")
-#     address = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"Address", "class":"form-control"}), label="")
-#     city = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"City", "class":"form-control"}), label="")
-#     state = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"State", "class":"form-control"}), label="")
-#     zipcode = forms.CharField(required=True, widget=forms.widgets.TextInput(attrs={"placeholder":"Zipcode", "class":"form-control"}), label="")
+    YES_NO_CHOICES = [
+        ("", "Select one"),
+        (True, "True"),
+        (False, "False"),
+    ]
+
+    name = forms.CharField(required=True, max_length=100, 
+                            widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name")
+    description = forms.CharField(required=True,
+                                  widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Description")
+    isbn = forms.CharField(required=True,
+                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="ISBN")
+    page_count = forms.IntegerField(required=True,
+                                    widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Page Count")
+    issued_out = forms.ChoiceField(required=True, initial=False, choices=YES_NO_CHOICES, disabled=True,
+                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
+    author = forms.CharField(required=True, 
+                             widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Author")
+    year = forms.CharField(required=True, max_length=4, 
+                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Year Published")
+    image = forms.ImageField(required=True,
+                             widget=forms.widgets.ClearableFileInput(attrs={"placeholder":"", "class":"form-control"}), label="Image")
+    quantity = forms.IntegerField(required=True,
+                                  widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Quantity")
+    series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES,
+                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Part Of A Series")
+    name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name Of Series")
+    pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Position In Series")
+    genre = forms.CharField(required=True, 
+                            widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Genre",
+                            help_text='<span class="form-text text-muted"><small>Separate each genre value with commas. Don\'t use spaces! Each genre can spaces in its name.</small></span>')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        series = cleaned_data.get("series")
+        name_of_series = cleaned_data.get("name_of_series")
+        pos_in_series = cleaned_data.get("pos_in_series")
+
+        if series:
+            if series == "True" and name_of_series == "":
+                raise forms.ValidationError("Name of Series required!")
+            elif series == "True" and pos_in_series == None:
+                raise forms.ValidationError("Position in Series required!")
+            elif series == "True" and pos_in_series < 1:
+                raise forms.ValidationError("Position in Series must be greater than 0!")
+            elif series == "False" and pos_in_series != None:
+                raise forms.ValidationError("Book is not part of a series!")
+            elif series == "False" and name_of_series:
+                raise forms.ValidationError("Book is not part of a series!")
+            
+        return cleaned_data
+
+    def clean_page_count(self):
+        data = self.cleaned_data["page_count"]
+        if data < 1:
+            raise forms.ValidationError("Pages must be greater than 0!")
+        return data
+            
+    def clean_quantity(self):
+        data = self.cleaned_data["quantity"]
+        if data < 0:
+            raise forms.ValidationError("You can't have a negative number of books!")
+        return data
+
+class RequestBookForm(forms.ModelForm):
+    """Create form from book model in models.py """
+
+    class Meta:
+        model = RequestBook
+        fields = "__all__"
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        super(RequestBookForm, self).__init__(*args, **kwargs)
+
+        self.fields['name'].widget.attrs['class'] = 'form-control'
+        self.fields['name'].label = 'Name'
+
+        self.fields['author'].widget.attrs['class'] = 'form-control'
+        self.fields['author'].label = 'Author'
+
+# create form for editing images
+
+# Create Edit Book Form
+class EditBookForm(forms.Form):
+    """Create form using the Book class in model """
+
+    YES_NO_CHOICES = [
+        ("", "Select one"),
+        (True, "True"),
+        (False, "False"),
+    ]
+
+    name = forms.CharField(required=True, max_length=100, 
+                            widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name")
+    description = forms.CharField(required=True,
+                                  widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Description")
+    isbn = forms.CharField(required=True,
+                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="ISBN")
+    page_count = forms.IntegerField(required=True,
+                                    widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Page Count")
+    issued_out = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, disabled=True,
+                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
+    author = forms.CharField(required=True, 
+                             widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Author")
+    year = forms.CharField(required=True, max_length=4, 
+                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Year Published")
+    quantity = forms.IntegerField(required=True,
+                                  widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Quantity")
+    series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES,
+                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Part Of A Series")
+    name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name Of Series")
+    pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Position In Series")
+    genre = forms.CharField(required=True, 
+                            widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Genre",
+                            help_text='<span class="form-text text-muted"><small>Separate each genre value with commas. Don\'t use spaces! Each genre can spaces in its name.</small></span>')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        series = cleaned_data.get("series")
+        name_of_series = cleaned_data.get("name_of_series")
+        pos_in_series = cleaned_data.get("pos_in_series")
+
+        if series:
+            if series == "True" and name_of_series == "":
+                raise forms.ValidationError("Name of Series required!")
+            elif series == "True" and pos_in_series == None:
+                raise forms.ValidationError("Position in Series required!")
+            elif series == "True" and pos_in_series < 1:
+                raise forms.ValidationError("Position in Series must be greater than 0!")
+            elif series == "False" and pos_in_series != None:
+                raise forms.ValidationError("Book is not part of a series!")
+            elif series == "False" and name_of_series:
+                raise forms.ValidationError("Book is not part of a series!")
+            
+        return cleaned_data
+
+    def clean_page_count(self):
+        data = self.cleaned_data["page_count"]
+        if data < 1:
+            raise forms.ValidationError("Pages must be greater than 0!")
+        return data
+            
+    def clean_quantity(self):
+        data = self.cleaned_data["quantity"]
+        if data < 0:
+            raise forms.ValidationError("You can't have a negative number of books!")
+        return data

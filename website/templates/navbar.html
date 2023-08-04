@@ -5,13 +5,31 @@
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        {% if user.is_authenticated %}
+        {% if user.is_authenticated and staff %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <a class="nav-link" href="#">Request Book</a>
+            <a class="nav-link" href="{% url 'add_book' %}">Add Book</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="#">Add Staff</a>  
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Requested Books</a>  
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+          </li>
+        </ul>
+        {% elif user.is_authenticated %}
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
             <a class="nav-link" href="#">Return Book</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">History</a>  
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'request_book' %}">Request A Book</a>  
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'logout' %}">Logout</a>
@@ -19,6 +37,9 @@
         </ul>
         {% else %}
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'request_book' %}">Request A Book</a>  
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'login' %}">Login</a>
           </li>

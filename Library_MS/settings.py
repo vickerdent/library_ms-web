@@ -9,12 +9,9 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
+import os
 from pathlib import Path
 from dotenv import load_dotenv
-import os
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,9 +20,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-
-un_key = os.getenv("D_KEY")
-SECRET_KEY = un_key
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -77,18 +73,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'Library_MS.wsgi.application'
 
 
-password = os.getenv("PASSWORD")
-username = os.getenv("USER")
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
-        'USER': username,
-        'PASSWORD': password,
+        'USER': os.getenv("PG_USER"),
+        'PASSWORD': os.getenv("PG_PASSWORD"),
         'HOST': 'library-project.cjblnlmu8xen.eu-north-1.rds.amazonaws.com',
         'PORT': '5432'
     }
@@ -136,6 +131,10 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "otherstaticfiles",
 ]
+
+
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
