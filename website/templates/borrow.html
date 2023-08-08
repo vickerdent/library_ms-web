@@ -2,11 +2,19 @@
 
 {% block content%}
 {% load static %}
-<div class="col-md-9 offset-md-2">
-    <img class="img-fluid" src="{% static 'heroes.png' %}" alt="Picture Of Heroes" width="360px">
-    <img class="img-fluid" src="{% static 'hero.jpg' %}" alt="Picture Of A Woman" width="360px">
+<div class="col-md-6 offset-md-3">
+    <div class="card w-50">
+        <div class="card-body">
+        <h5 class="card-title">{{ book.name }}</h5>
+        <p class="card-text">{{ book.description|truncatewords:20 }}</p>
+        </div>
+    </div>
+    <br>
+    <form method="post" action="{% url 'borrow' book.slug %}"">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <br>
+        <button type="submit" class="btn btn-secondary">Borrow Book</button>
+    </form>
 </div>
-
-<br>
-
 {% endblock %} 

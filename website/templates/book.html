@@ -8,7 +8,7 @@
         <b>{{ book.name }}</b>
     </div>
     <div class="card-body">
-        <p class="card-text"><strong>Description:</strong> {{ book.description }}</p>
+        <p class="card-text"><strong>Description:</strong> {{ book.description|safe }}</p>
         <p class="card-text"><strong>ISBN:</strong> {{ book.isbn }}</p>
         <p class="card-text"><strong>Page Count:</strong> {{ book.page_count }}</p>
         <p class="card-text"><strong>Issued Out:</strong> {{ book.issued_out }}</p>
@@ -29,12 +29,15 @@
     </div>
 </div>
 <br>
-<a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
 {% if staff %}
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
     <a href="{% url 'edit_book' book.slug %}" class="btn btn-secondary">Edit Book</a>
     <a href="{% url 'delete_book' book.slug %}" class="btn btn-secondary">Delete Book</a>
-{% else %}
+{% elif user.email not in book.issuees %}
+    <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
     <a href="{% url 'borrow' book.slug %}" class="btn btn-secondary">Borrow Book</a>
+{% else %}
+    <a href="http://" target="_blank" rel="noopener noreferrer"></a>
 {% endif %}
 
 

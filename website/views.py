@@ -1,31 +1,43 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User, auth
+from django.contrib.auth.models import User
 from django.contrib import messages
-from django.core.files.images import ImageFile
 from django.utils.text import slugify
-from .forms import SignUpForm, EditBookForm, BookForm, RequestBookForm
+from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestABookForm
 from utils import book_collection, user_collection, pymongo, \
-    requests_collection, handle_uploaded_image, delete_image, change_image_name
-from .models import Book, Person, correct_id, RequestABook
+    book_requests_collection, handle_uploaded_image, delete_image, change_image_name, \
+    borrowed_collection, calculate_return, return_status, correct_id
+from .models import Book, Person, RequestABook, BorrowedBook, BorrowedBookInstance
 
 # Create your views here.
 def home(request):
+    return_status()
     all_books = []
     try:
         db_books = list(book_collection.find().sort("Name", pymongo.ASCENDING))
         for book in db_books:
-            one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
-                            book["Page Count"], book["Issued Out"], book["Author"],
-                            book["Year Published"], book["Quantity"], False, "", None, [], None, book["Slug"])
-            all_books.append(one_book)
+            if request.user.is_authenticated:
+                if request.user.email not in book["Issuees"]:
+                    one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                                    book["Page Count"], book["Issued Out"], book["Author"],
+                                    book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                                    book["Name Of Series"], book["Position In Series"], book["Genre"],
+                                    book["Book Image"], book["Slug"], book["Issuees"])
+                    all_books.append(one_book)
+            else:
+                one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                                    book["Page Count"], book["Issued Out"], book["Author"],
+                                    book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                                    book["Name Of Series"], book["Position In Series"], book["Genre"],
+                                    book["Book Image"], book["Slug"], book["Issuees"])
+                all_books.append(one_book)
     except:
         all_books = ["No Connection to Database Server", "Try again in a short while."]
 
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
         user = user_collection.find_one({"Email": request.user.email})
-        if user is not None and user["Is Staff"] == True:
+        if user and user["Is Staff"] == True:
             return render(request, "home.html", {"books": all_books, "staff": True})
 
     return render(request, "home.html", {"books": all_books, "staff": False})
@@ -37,7 +49,7 @@ def login_user(request):
         password = request.POST["password"]
 
         user = authenticate(username=username, password=password)
-        if user is not None:
+        if user:
             login(request, user)
             messages.success(request, "You have logged in successfully.")
             return redirect("home")
@@ -86,21 +98,22 @@ def sign_up(request):
     return render(request, "signup.html", {"form": form})
 
 def book_details(request, slug):
+    return_status()
     # Look up record for book
     book = book_collection.find_one({"Slug": slug})
-    if book is not None:
+    if book:
         # note that images is saved using book.id, not slug
         current_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
                             book["Page Count"], book["Issued Out"], book["Author"],
                             book["Year Published"], book["Quantity"], book["Part Of A Series"],
                             book["Name Of Series"], book["Position In Series"], book["Genre"],
-                            book["Book Image"], book["Slug"])
+                            book["Book Image"], book["Slug"], book["Issuees"])
 
         if request.user.is_authenticated:
             #check if user is staff from MongoDB
             user = user_collection.find_one({"Email": request.user.email})
 
-            if user is not None and user["Is Staff"] == True:
+            if user and user["Is Staff"] == True:
                 return render(request, "book.html", {"book": current_book, "staff": True})
             
         return render(request, "book.html", {"book": current_book, "staff": False})
@@ -112,7 +125,35 @@ def borrow(request, slug):
     # on return, delete the borrower's username from the
     # book's issuee's list, and change issued out to false
     if request.user.is_authenticated:
-        return render(request, "borrow.html", {})
+        book = book_collection.find_one({"Slug": slug})
+        
+        if book:
+            # check to ensure user has not already borrowed book
+            if request.user.email in book["Issuees"]:
+                messages.error(request, "Book already borrowed!")
+                return redirect("home")
+        
+            current_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                            book["Page Count"], book["Issued Out"], book["Author"],
+                            book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                            book["Name Of Series"], book["Position In Series"], book["Genre"],
+                            book["Book Image"], book["Slug"], book["Issuees"])
+            form = BorrowBookForm(request.POST or None)
+            if form.is_valid():
+                email = request.user.email
+                book_id = current_book.book_id
+                return_date = calculate_return(form.cleaned_data["duration"])
+
+                new_borrow = BorrowedBook(email, book_id, return_date)
+                borrowed_collection.insert_one(new_borrow.to_dict())
+                book_collection.update_one({"ID": book_id}, {
+                    "$addToSet": {"Issuees": email}
+                })
+                return redirect("home")
+            return render(request, "borrow.html", {"book": current_book, "form": form})
+        else:
+            messages.error(request, "Book does not exist!")
+            return render(request, "404.html", {})
     else:
         messages.info(request, "You must be logged in to borrow a book")
         return redirect("login")
@@ -325,16 +366,38 @@ def delete_book(request, slug):
         return redirect("login")
 
 def request_book(request):
-    if request.method == "POST":
-        form = RequestBookForm(request.POST)
-        name = form.cleaned_data["name"]
-        author = form.cleaned_data["author"]
-
-        new_request = RequestABook(name, author)
-        requests_collection.insert_one(new_request.to_dict())
-
-    else:
-        form = RequestBookForm()
+    form = RequestABookForm(request.POST or None)
+    if form.is_valid():
+        new_request = RequestABook(form.cleaned_data["name"], form.cleaned_data["author"])
+        for book in list(book_collection.find()):
+            if str(book["Name"]).lower() == new_request.name.lower():
+                messages.info(request, "Book already exists!")
+                return redirect("request_book")
+            
+        for book in list(book_requests_collection.find()):
+            if str(book["name"]).lower() == new_request.name.lower():
+                messages.info(request, "Book already requested and in process!")
+                return redirect("request_book")
+        book_requests_collection.insert_one(new_request.to_dict())
+        messages.success(request, "You have successfully deleted the book.")
+        return redirect("home")
     return render(request, "request_book.html", {"form": form})
 
-
+def history(request):
+    return_status()
+    if request.user.is_authenticated:
+        super_list = []
+        for item in list(borrowed_collection.find({"email": request.user.email})):
+            book = book_collection.find_one({"ID": item["book_id"]})
+            if book:
+                book = BorrowedBookInstance(book["Name"], str(item["date_borrowed"].day) + "/"
+                                             + str(item["date_borrowed"].month) + "/" + 
+                                             str(item["date_borrowed"].year), str(item["return_date"].day)
+                                             + "/" + str(item["return_date"].month) + "/" + 
+                                             str(item["return_date"].year),
+                                             item["returned"], book["Slug"])
+                super_list.append(book)
+        return render(request, "history.html", {"books": super_list})
+    else:
+        messages.info(request, "You must be logged in to delete a book!")
+        return redirect("login")

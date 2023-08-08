@@ -2,21 +2,31 @@
 
 <!-- Continue here -->
 {% block content%}
-<div class="col-md-6 offset-md-3">
-    <h2>Hello, user!</h2>
-    <br>
-    <form method="post" action="{% url 'login' %}">
-        {% csrf_token %}
-        <div class="mb-3">
-            <input type="text" class="form-control" name="username" placeholder="Username" required>
-        </div>
-        <br>
-        <div class="mb-3">
-            <input type="password" class="form-control" name="password" placeholder="Password" required>
-        </div>
-        <br>
-        <button type="submit" class="btn btn-secondary">Login</button>
-    </form>
+<div>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+              <th scope="col">Book</th>
+              <th scope="col">Borrow Date</th>
+              <th scope="col">Return Date</th>
+              <th scope="col">Return Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for book in books %}
+            <tr>
+              <td><a href="{% url 'book' book.slug %}">{{ book.name }}</a></td>
+              <td>{{ book.date_borrowed }}</td>
+              <td>{{ book.return_date }}</td>
+              {% if book.returned %}
+                <td>Returned</td>
+              {% else %}
+                <td>Not Returned</td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+    </table>
 </div>
 
 {% endblock %}
