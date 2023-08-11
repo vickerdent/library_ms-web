@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block title %} History {% endblock %}
+
 <!-- Continue here -->
 {% block content%}
 <div>
@@ -8,6 +10,7 @@
             <tr>
               <th scope="col">Book</th>
               <th scope="col">Borrow Date</th>
+              <th scope="col">Expected Return Date</th>
               <th scope="col">Return Date</th>
               <th scope="col">Return Status</th>
             </tr>
@@ -17,6 +20,7 @@
             <tr>
               <td><a href="{% url 'book' book.slug %}">{{ book.name }}</a></td>
               <td>{{ book.date_borrowed }}</td>
+              <td>{{ book.expected_return }}</td>
               <td>{{ book.return_date }}</td>
               {% if book.returned %}
                 <td>Returned</td>

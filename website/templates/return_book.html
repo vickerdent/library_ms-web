@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %} Borrowed Books {% endblock %}
+
+<!-- Continue here -->
+{% block content%}
+<div class="col-md-6 offset-md-3">
+    <h2>Borrowed Books</h2>
+    <br>
+    <table class="table">
+        <tbody>
+        {% for book in books %}
+        <tr>
+            <td>{{ book.name }}</td>
+            <td><a href="{# {% url 'process_return' book.slug %} #}" class="btn btn-secondary">
+                Return Book</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -13,4 +13,6 @@ urlpatterns = [
     path('delete_book/<str:slug>', views.delete_book, name='delete_book'),
     path('request_book/', views.request_book, name='request_book'),
     path('history/', views.history, name='history'),
+    path('return_book/', views.return_book, name='return_book'),
+    path('process_return/<str:slug>', views.process_return, name='process_return'),
 ]

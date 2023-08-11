@@ -184,13 +184,14 @@ class BorrowedBook:
     """Class to handle the borrowing of books
     to and from the web application"""
 
-    __slots__ = ("email", "book_id", "return_date", "date_borrowed", "returned")
+    __slots__ = ("email", "book_id", "return_date", "expected_return", "date_borrowed", "returned")
 
-    def __init__(self, email: str, book_id: str,  return_date: datetime, 
+    def __init__(self, email: str, book_id: str,  return_date: datetime, expected_return: datetime, 
                  date_borrowed=datetime.now(), returned: bool=False) -> None:
         self.email = email
         self.book_id = book_id
         self.date_borrowed = date_borrowed
+        self.expected_return = expected_return
         self.return_date = return_date
         self.returned = returned
 
@@ -201,6 +202,7 @@ class BorrowedBook:
             "email": self.email,
             "book_id": self.book_id,
             "date_borrowed": self.date_borrowed,
+            "expected_return": self.expected_return,
             "return_date": self.return_date,
             "returned": self.returned
         }
@@ -210,12 +212,13 @@ class BorrowedBookInstance:
     """Class to handle the representation of 
     books in the web application."""
 
-    __slots__ = ("name", "date_borrowed", "return_date", "returned", "slug")
+    __slots__ = ("name", "date_borrowed", "return_date", "expected_return", "returned", "slug")
 
     def __init__(self, name: str, date_borrowed: str, 
-                 return_date: str, returned: bool, slug: str) -> None:
+                 return_date: str, expected_return: str, returned: bool, slug: str) -> None:
         self.name = name
         self.date_borrowed = date_borrowed
         self.return_date = return_date
+        self.expected_return = expected_return
         self.returned = returned
         self.slug = slug

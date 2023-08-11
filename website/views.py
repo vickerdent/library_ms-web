@@ -122,8 +122,7 @@ def book_details(request, slug):
         return render(request, "404.html", {})
 
 def borrow(request, slug):
-    # on return, delete the borrower's username from the
-    # book's issuee's list, and change issued out to false
+    # Check that user is logged in
     if request.user.is_authenticated:
         book = book_collection.find_one({"Slug": slug})
         
@@ -144,11 +143,12 @@ def borrow(request, slug):
                 book_id = current_book.book_id
                 return_date = calculate_return(form.cleaned_data["duration"])
 
-                new_borrow = BorrowedBook(email, book_id, return_date)
+                new_borrow = BorrowedBook(email, book_id, return_date, return_date)
                 borrowed_collection.insert_one(new_borrow.to_dict())
                 book_collection.update_one({"ID": book_id}, {
                     "$addToSet": {"Issuees": email}
                 })
+                messages.success(request, "You have borrowed a new book!")
                 return redirect("home")
             return render(request, "borrow.html", {"book": current_book, "form": form})
         else:
@@ -158,7 +158,7 @@ def borrow(request, slug):
         messages.info(request, "You must be logged in to borrow a book")
         return redirect("login")
 
-def add_book(request):    
+def add_book(request):
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
         user = user_collection.find_one({"Email": request.user.email})
@@ -394,10 +394,44 @@ def history(request):
                                              + str(item["date_borrowed"].month) + "/" + 
                                              str(item["date_borrowed"].year), str(item["return_date"].day)
                                              + "/" + str(item["return_date"].month) + "/" + 
-                                             str(item["return_date"].year),
+                                             str(item["return_date"].year), str(item["expected_return"].day)
+                                             + "/" + str(item["expected_return"].month) + "/" + 
+                                             str(item["expected_return"].year),
                                              item["returned"], book["Slug"])
                 super_list.append(book)
         return render(request, "history.html", {"books": super_list})
     else:
         messages.info(request, "You must be logged in to delete a book!")
+        return redirect("login")
+
+def return_book(request):
+    # on return, delete the borrower's username from the
+    # book's issuee's list, and change issued out to false
+    if request.user.is_authenticated:
+        super_list = []
+        for item in list(borrowed_collection.find({"email": request.user.email, "returned": False})):
+            book = book_collection.find_one({"ID": item["book_id"]})
+            if book:
+                super_list.append({"name": book["Name"], "slug": book["Slug"]})
+        return render(request, "return_book.html", {"books": super_list})
+    else:
+        messages.info(request, "You must be logged in to view borrowed books!")
+        return redirect("login")
+
+
+def process_return(request, slug):
+    if request.user.is_authenticated:
+        curr_book = book_collection.find_one({"Slug": slug})
+        if curr_book:
+            book_collection.update_one({"Slug": slug},
+                                   {"$pull": {"Issuees": request.user.email}})
+            borrowed_collection.update_one({"book_id": curr_book["ID"]},
+                                           {"$set": {"returned": True}})
+            messages.success(request, "You have successfully returned the book.")
+            return redirect("home")
+        else:
+            messages.error(request, "Book does not exist!")
+            return render(request, "404.html", {})
+    else:
+        messages.info(request, "You must be logged in to return a book!")
         return redirect("login")

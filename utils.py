@@ -57,12 +57,13 @@ def correct_id(name) -> str:
 # what = book_collection.create_index([("Slug", pymongo.ASCENDING)], unique=True)
 # print(what)
 
+# To make this much faster, you should probably create an aggregation pipeline
 def return_status():
     today = datetime.now()
     for item in list(borrowed_collection.find()):
-        if today + timedelta(days=0) >= item["return_date"] and not item["returned"]:
+        if today + timedelta(days=0) >= item["expected_return"] and not item["returned"]:
             borrowed_collection.update_one({"_id": item["_id"]},
-                                           {"$set": {"returned": True}})
+                                           {"$set": {"returned": True, "return_date": today}})
             book_collection.update_one({"ID": item["book_id"]},
                                        {"$pull": {"Issuees": item["email"]}})
 
