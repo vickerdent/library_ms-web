@@ -8,6 +8,7 @@ from utils import book_collection, user_collection, pymongo, \
     book_requests_collection, handle_uploaded_image, delete_image, change_image_name, \
     borrowed_collection, calculate_return, return_status, correct_id
 from .models import Book, Person, RequestABook, BorrowedBook, BorrowedBookInstance
+from datetime import datetime
 
 # Create your views here.
 def home(request):
@@ -97,10 +98,10 @@ def sign_up(request):
     
     return render(request, "signup.html", {"form": form})
 
-def book_details(request, slug):
+def book_details(request, book):
     return_status()
     # Look up record for book
-    book = book_collection.find_one({"Slug": slug})
+    book = book_collection.find_one({"Slug": book})
     if book:
         # note that images is saved using book.id, not slug
         current_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
@@ -121,10 +122,10 @@ def book_details(request, slug):
         messages.error(request, "Book does not exist!")
         return render(request, "404.html", {})
 
-def borrow(request, slug):
+def borrow(request, book):
     # Check that user is logged in
     if request.user.is_authenticated:
-        book = book_collection.find_one({"Slug": slug})
+        book = book_collection.find_one({"Slug": book})
         
         if book:
             # check to ensure user has not already borrowed book
@@ -158,13 +159,19 @@ def borrow(request, slug):
         messages.info(request, "You must be logged in to borrow a book")
         return redirect("login")
 
-def add_book(request):
+def add_book(request, dname=None, dauthor=None):
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
         user = user_collection.find_one({"Email": request.user.email})
 
+        # if name and author are given pass initial
+        if dname and dauthor:
+            initial = {"name": dname, "author": dauthor}
+        else:
+            initial = None
+
         if user is not None and user["Is Staff"] == True:
-            form = BookForm(request.POST or None, request.FILES or None)
+            form = BookForm(request.POST or None, request.FILES or None, initial=initial)
             if form.is_valid():
                 name = form.cleaned_data["name"]
                 book_id = correct_id(name)
@@ -198,6 +205,8 @@ def add_book(request):
                                 new_genre, image.name)
                 
                 book_collection.insert_one(new_book.to_dict())
+                if initial and dname and dauthor:
+                    book_requests_collection.delete_one({"name": dname, "author": dauthor})
 
                 messages.success(request, "You have successfully added a book.")
                 return redirect("book", slug = slugify(new_book.name))
@@ -211,14 +220,14 @@ def add_book(request):
         messages.info(request, "You must be logged in to add a book")
         return redirect("login")
 
-def edit_book(request, slug):
+def edit_book(request, book):
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
         user = user_collection.find_one({"Email": request.user.email})
 
         if user is not None and user["Is Staff"] == True:
             # proceed if user is a staff member
-            current_book = book_collection.find_one({"Slug": slug})
+            current_book = book_collection.find_one({"Slug": book})
             # change quantity as soon as changes are saved
             if current_book is not None:
                 #current_book exists in database: mongoDB
@@ -333,7 +342,7 @@ def edit_book(request, slug):
                     
                     messages.success(request, "You have successfully updated the book.")
                     return redirect("book", slug = new_slug)
-                return render(request, "edit_book.html", {"form": form})
+                return render(request, "edit_book.html", {"form": form, "staff": True})
             else:
                 #book does not exist. Get out of here
                 messages.info(request, "Book does not exist. Add book to database.")
@@ -345,17 +354,17 @@ def edit_book(request, slug):
         messages.error(request, "You must be logged in to view that page...")
         return redirect("login")
     
-def delete_book(request, slug):
+def delete_book(request, book):
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
         user = user_collection.find_one({"Email": request.user.email})
 
         if user is not None and user["Is Staff"] == True:
-            curr_book = book_collection.find_one({"Slug": slug})
+            curr_book = book_collection.find_one({"Slug": book})
             if curr_book is not None:
                 delete_image(curr_book["Book Image"])
 
-            book_collection.delete_one({"Slug": slug})
+            book_collection.delete_one({"Slug": book})
             messages.success(request, "You have successfully deleted the book.")
             return redirect("home")
         else:
@@ -363,6 +372,23 @@ def delete_book(request, slug):
             return redirect("home")
     else:
         messages.info(request, "You must be logged in to delete a book!")
+        return redirect("login")
+    
+def delete_request(request, dname, dauthor):
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email})
+
+        if user is not None and user["Is Staff"] == True:
+            book_requests_collection.delete_one({"name": dname, "author": dauthor})
+
+            messages.success(request, "You have successfully deleted the request.")
+            return redirect("requested_books")
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.info(request, "You must be logged in to delete a request!")
         return redirect("login")
 
 def request_book(request):
@@ -379,7 +405,7 @@ def request_book(request):
                 messages.info(request, "Book already requested and in process!")
                 return redirect("request_book")
         book_requests_collection.insert_one(new_request.to_dict())
-        messages.success(request, "You have successfully deleted the book.")
+        messages.success(request, "You have successfully requested the book.")
         return redirect("home")
     return render(request, "request_book.html", {"form": form})
 
@@ -419,14 +445,16 @@ def return_book(request):
         return redirect("login")
 
 
-def process_return(request, slug):
+def process_return(request, book):
+    # check that user is logged in
     if request.user.is_authenticated:
-        curr_book = book_collection.find_one({"Slug": slug})
+        curr_book = book_collection.find_one({"Slug": book})
         if curr_book:
-            book_collection.update_one({"Slug": slug},
+            # return borrowed book by updtaing concerned collections
+            book_collection.update_one({"Slug": book},
                                    {"$pull": {"Issuees": request.user.email}})
             borrowed_collection.update_one({"book_id": curr_book["ID"]},
-                                           {"$set": {"returned": True}})
+                                           {"$set": {"returned": True, "return_date": datetime.now()}})
             messages.success(request, "You have successfully returned the book.")
             return redirect("home")
         else:
@@ -435,3 +463,15 @@ def process_return(request, slug):
     else:
         messages.info(request, "You must be logged in to return a book!")
         return redirect("login")
+    
+def requested_books(request):
+    # check that user is logged in
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email})
+
+        if user and user["Is Staff"] == True:
+            # proceed if user is a staff member
+            all_books = list(book_requests_collection.find())
+
+            return render(request, "requested_books.html", {"books": all_books,"staff": True})

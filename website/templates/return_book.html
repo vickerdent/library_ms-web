@@ -12,7 +12,7 @@
         {% for book in books %}
         <tr>
             <td>{{ book.name }}</td>
-            <td><a href="{# {% url 'process_return' book.slug %} #}" class="btn btn-secondary">
+            <td><a href="{% url 'process_return' book.slug %}" class="btn btn-secondary">
                 Return Book</a>
             </td>
         </tr>

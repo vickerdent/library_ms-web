@@ -15,7 +15,7 @@
     <div class="col">
       <a href="{% url 'book' book.slug %}">
       <div class="card h-100">
-        <!-- <img src="{% static 'heroes.png' %}" class="card-img-top" alt="Book Image"> -->
+        <img src="{{ book.image.url }}" class="card-img-top" alt="Book Image">
         <div class="card-body">
           <h5 class="card-title">{{ book.name }}</h5>
           <p class="card-text">{{ book.description|truncatewords:10 }}.</p>

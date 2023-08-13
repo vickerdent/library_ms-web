@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %} Requested Books {% endblock %}
+
+<!-- Continue here -->
+{% block content%}
+<div class="col-md-10 offset-md-1">
+    <h2>Requested Books</h2>
+    <br>
+    <table class="table">
+        <tbody>
+        {% for book in books %}
+        <tr>
+            <td>{{ book.name }} - {{ book.author }}</td>
+            <td><a href="{% url 'add_a_book' book.name book.author %}" class="btn btn-secondary">
+                Add Book</a>
+            </td>
+            <td><a href="{% url 'delete_request' book.name book.author %}" class="btn btn-danger">
+                Delete Entry</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
