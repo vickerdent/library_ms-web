@@ -11,6 +11,7 @@ urlpatterns = [
     path('add_book/', views.add_book, name='add_book'),
     path('add_book/<str:dname>/<str:dauthor>', views.add_book, name='add_a_book'),
     path('edit_book/<str:book>', views.edit_book, name='edit_book'),
+    path('edit_book_image/<str:book>', views.edit_book_image, name='edit_book_image'),
     path('delete_book/<str:book>', views.delete_book, name='delete_book'),
     path('request_book/', views.request_book, name='request_book'),
     path('history/', views.history, name='history'),

@@ -12,10 +12,11 @@ class Book:
     __slots__ = ("book_id", "name", "description", "isbn", "page_count", "issued_out", 
                  "author", "year", "issuees", "image", "quantity", "slug", "series",
                  "name_of_series", "pos_in_series", "genre")
+    
     def __init__(self, book_id: str, name: str, description: str, isbn: str, page_count: int,
                  issued_out: bool, author: str, year: str, quantity: int=0,
                  series: bool=False, name_of_series: str="", pos_in_series: int=None,
-                 genre: list=[], image: str="", slug=None, issuees: list=[]):
+                 genre: list=[], image: list=[], slug=None, issuees: list=[]):
         self.book_id = book_id
         self.name = name
         self.description = description

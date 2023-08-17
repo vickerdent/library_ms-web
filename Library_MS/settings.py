@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
             ],
         },
     },
@@ -131,8 +132,24 @@ STATICFILES_DIRS = [
     BASE_DIR / "otherstaticfiles",
 ]
 
-MEDIA_URL = 'media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Storages
+STORAGES = {
+            "default": {"BACKEND": "website.custom_storage.MediaStorage"},
+            "staticfiles": {"BACKEND": "website.custom_storage.StaticStorage"}
+            }
+# DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
+# DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
+# DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
+# DROPBOX_OAUTH2_REFRESH_TOKEN = os.getenv("DROPBOX_OAUTH2_REFRESH_TOKEN")
+# DROPBOX_ROOT_PATH = "/"
+# DROPBOX_TIMEOUT = 100
+# DROPBOX_WRITE_MODE = "add"
+
+AWS_S3_REGION_NAME = "us-east-005"
+AWS_S3_ENDPOINT_URL = "https://s3.us-east-005.backblazeb2.com"
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 
-{% block title %} Edit Book {% endblock %}
+{% block title %} Edit Book's Image {% endblock %}
 
 {% block content%}
 
 <div class="col-md-6 offset-md-3">
-    <h2>Update Book</h2>
+    <h2>Update Book's Image</h2>
     <br>
-    <form method="post" action="">
+    <form method="post" action="" enctype="multipart/form-data">
         {% csrf_token %}
         {% if form.errors %}
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -23,7 +23,7 @@
         {% endif %}
         {{ form.as_p }}
         <br>
-        <button type="submit" class="btn btn-secondary">Update Book</button>
+        <button type="submit" class="btn btn-secondary">Update Image</button>
     </form>
 </div>
 

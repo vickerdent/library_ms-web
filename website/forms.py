@@ -6,16 +6,16 @@ from django.forms.utils import ErrorList
 
 class SignUpForm(UserCreationForm):
     """Enables users to sign up to the web app."""
-    email = forms.CharField(label="",
-                             widget=forms.EmailInput(attrs={"name": "email", "class": "form-control", "placeholder": "E-mail Address"}))
-    first_name = forms.CharField(label="", max_length=100, 
-                             widget=forms.TextInput(attrs={"name": "first_name", "class": "form-control", "placeholder": "First Name"}))
-    last_name = forms.CharField(label="", max_length=100, 
-                             widget=forms.TextInput(attrs={"name": "last_name", "class": "form-control", "placeholder": "Last Name"}))
-    address = forms.CharField(label="", max_length=1000, 
-                             widget=forms.TextInput(attrs={"name": "address", "class": "form-control", "placeholder": "Address"}))
-    state = forms.CharField(label="", max_length=100, 
-                             widget=forms.TextInput(attrs={"name": "state", "class": "form-control", "placeholder": "State"}))
+    email = forms.CharField(label="", widget=forms.EmailInput(
+        attrs={"name": "email", "class": "form-control", "placeholder": "E-mail Address"}))
+    first_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(
+        attrs={"name": "first_name", "class": "form-control", "placeholder": "First Name"}))
+    last_name = forms.CharField(label="", max_length=100, widget=forms.TextInput(
+        attrs={"name": "last_name", "class": "form-control", "placeholder": "Last Name"}))
+    address = forms.CharField(label="", max_length=1000, widget=forms.TextInput(
+        attrs={"name": "address", "class": "form-control", "placeholder": "Address"}))
+    state = forms.CharField(label="", max_length=100, widget=forms.TextInput(
+        attrs={"name": "state", "class": "form-control", "placeholder": "State"}))
                              
     class Meta:
         model = User
@@ -48,31 +48,35 @@ class BookForm(forms.Form):
         (False, "False"),
     ]
 
-    name = forms.CharField(required=True, max_length=100, 
-                            widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name")
-    description = forms.CharField(required=True,
-                                  widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Description")
-    isbn = forms.CharField(required=True,
-                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="ISBN")
-    page_count = forms.IntegerField(required=True,
-                                    widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Page Count")
+    name = forms.CharField(required=True, max_length=100, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Name")
+    description = forms.CharField(required=True, widget=forms.widgets.Textarea(
+        attrs={"placeholder":"", "class":"form-control"}), label="Description")
+    isbn = forms.CharField(required=True, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="ISBN")
+    page_count = forms.IntegerField(required=True, widget=forms.widgets.NumberInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Page Count")
     issued_out = forms.ChoiceField(required=True, initial=False, choices=YES_NO_CHOICES, disabled=True,
-                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
-    author = forms.CharField(required=True, 
-                             widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Author")
-    year = forms.CharField(required=True, max_length=4, 
-                           widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Year Published")
-    image = forms.ImageField(required=True,
-                             widget=forms.widgets.ClearableFileInput(attrs={"placeholder":"", "class":"form-control"}), label="Image")
-    quantity = forms.IntegerField(required=True,
-                                  widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Quantity")
-    series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES,
-                                   widget=forms.widgets.Select(attrs={"placeholder":"", "class":"form-select"}), label="Part Of A Series")
-    name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(attrs={"placeholder":"", "class":"form-control"}), label="Name Of Series")
-    pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(attrs={"placeholder":"", "class":"form-control"}), label="Position In Series")
-    genre = forms.CharField(required=True, 
-                            widget=forms.widgets.Textarea(attrs={"placeholder":"", "class":"form-control"}), label="Genre",
-                            help_text='<span class="form-text text-muted"><small>Separate each genre value with commas. Don\'t use spaces! Each genre can spaces in its name.</small></span>')
+                                   widget=forms.widgets.Select(
+                                       attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
+    author = forms.CharField(required=True, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Author")
+    year = forms.CharField(required=True, max_length=4, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Year Published")
+    image = forms.ImageField(required=True, widget=forms.widgets.ClearableFileInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Image")
+    quantity = forms.IntegerField(required=True, widget=forms.widgets.NumberInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Quantity")
+    series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, widget=forms.widgets.Select(
+        attrs={"placeholder":"", "class":"form-select"}), label="Part Of A Series")
+    name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Name Of Series")
+    pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Position In Series")
+    genre = forms.CharField(required=True, widget=forms.widgets.Textarea(
+        attrs={"placeholder":"", "class":"form-control"}), label="Genre",
+                            help_text='<span class="form-text text-muted"><small>Separate each genre \
+                            value with commas. Each genre can have spaces in its name.</small></span>')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -126,8 +130,9 @@ class EditBookForm(forms.Form):
         attrs={"placeholder":"", "class":"form-control"}), label="ISBN")
     page_count = forms.IntegerField(required=True, widget=forms.widgets.NumberInput(
         attrs={"placeholder":"", "class":"form-control"}), label="Page Count")
-    issued_out = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, disabled=True, widget=forms.widgets.Select(
-        attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
+    issued_out = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, disabled=True,
+                                   widget=forms.widgets.Select(
+                                       attrs={"placeholder":"", "class":"form-select"}), label="Issued Out")
     author = forms.CharField(required=True, widget=forms.widgets.TextInput(
         attrs={"placeholder":"", "class":"form-control"}), label="Author")
     year = forms.CharField(required=True, max_length=4, widget=forms.widgets.TextInput(
@@ -143,7 +148,7 @@ class EditBookForm(forms.Form):
     genre = forms.CharField(required=True, widget=forms.widgets.Textarea(
         attrs={"placeholder":"", "class":"form-control"}), label="Genre",
                             help_text='<span class="form-text text-muted"><small>Separate each genre \
-                            value with commas. Don\'t use spaces! Each genre can spaces in its name.</small></span>')
+                            value with commas. Each genre can have spaces in its name.</small></span>')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -176,6 +181,11 @@ class EditBookForm(forms.Form):
         if data < 0:
             raise forms.ValidationError("You can't have a negative number of books!")
         return data
+
+class EditImageForm(forms.Form):
+    """Create form to edit images for books """
+    image = forms.ImageField(required=True, widget=forms.widgets.ClearableFileInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Image")
 
 class BorrowBookForm(forms.Form):
     """Create form for borrowing books """

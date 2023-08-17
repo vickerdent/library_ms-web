@@ -10,6 +10,7 @@
         <b>{{ book.name }}</b>
     </div>
     <div class="card-body">
+        <img src="{{ book.image[0] }}" class="img-fluid" alt="Book Image">
         <p class="card-text"><strong>Description:</strong> {{ book.description|safe }}</p>
         <p class="card-text"><strong>ISBN:</strong> {{ book.isbn }}</p>
         <p class="card-text"><strong>Page Count:</strong> {{ book.page_count }}</p>
@@ -34,6 +35,7 @@
 {% if staff %}
     <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>
     <a href="{% url 'edit_book' book.slug %}" class="btn btn-secondary">Edit Book</a>
+    <a href="{% url 'edit_book_image' book.slug %}" class="btn btn-secondary">Edit Book</a>
     <a href="{% url 'delete_book' book.slug %}" class="btn btn-danger">Delete Book</a>
 {% elif user.email not in book.issuees %}
     <a href="{% url 'home' %}" class="btn btn-secondary">Back</a>

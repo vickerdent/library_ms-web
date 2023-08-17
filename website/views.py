@@ -3,10 +3,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils.text import slugify
-from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestABookForm
+from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestABookForm, \
+    EditImageForm
 from utils import book_collection, user_collection, pymongo, \
     book_requests_collection, handle_uploaded_image, delete_image, change_image_name, \
-    borrowed_collection, calculate_return, return_status, correct_id
+    borrowed_collection, calculate_return, return_status, correct_id, edit_image_in_bucket
 from .models import Book, Person, RequestABook, BorrowedBook, BorrowedBookInstance
 from datetime import datetime
 
@@ -194,7 +195,7 @@ def add_book(request, dname=None, dauthor=None):
 
                 image.name = change_image_name(image, book_id)
 
-                handle_uploaded_image(image)
+                image_url, image_path = handle_uploaded_image(image)
 
                 new_genre = str(genre).split(", ")
                 if form.cleaned_data["series"] == "True":
@@ -202,7 +203,7 @@ def add_book(request, dname=None, dauthor=None):
 
                 new_book = Book(book_id, name, description, isbn, page_count, issued_out, author,
                                 year, quantity, series, name_of_series, pos_in_series, 
-                                new_genre, image.name)
+                                new_genre, [image_url, image_path])
                 
                 book_collection.insert_one(new_book.to_dict())
                 if initial and dname and dauthor:
@@ -284,14 +285,6 @@ def edit_book(request, book):
                     new_slug = current_book["Slug"]
 
                     if book_id == current_book["ID"]:
-                        # book name never changed, then proceed like so:
-                        # delete_image(current_book["Book Image"])
-                            
-                        # book_id is the same as unedited book in mongodb
-                        # image.name = change_image_name(image, book_id)
-
-                        # MAKE SURE TO DELETE PREVIOUS IMAGE (if book image was changed)
-                        # handle_uploaded_image(image)
 
                         new_genre = str(genre).split(", ")
 
@@ -307,33 +300,28 @@ def edit_book(request, book):
                         if neo_book is not None:
                             # if different book (neo_book) exists, add a number to edited book id
                             book_id += str(len(list(book_collection.find({"Slug": current_book["Slug"]}, {"ID": 1}))) + 1)
-                            # image.name = change_image_name(image, book_id)
-
-                            # MAKE SURE TO DELETE PREVIOUS IMAGE (if book image was changed)
-                            # handle_uploaded_image(image)
-                            # delete_image(current_book["Book Image"])
 
                             new_genre = str(genre).split(",")
                             # also add a number to slug for book
                             new_slug += str(len(list(book_collection.find({"Slug": current_book["Slug"]}, {"ID": 1}))) + 1)
+                            
+                            # Edit book image in file storage to equate book_id
+                            image_url, image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
 
-                            new_book = Book(book_id, name, description, isbn, page_count,
-                                            issued_out, author, year, quantity, series,
-                                            name_of_series, pos_in_series, new_genre, new_slug)
+                            new_book = Book(book_id, name, description, isbn, page_count, issued_out,
+                                            author, year, quantity, series, name_of_series, pos_in_series, 
+                                            new_genre, [image_url, image_path], new_slug, current_book["Issuees"])
                             book_collection.insert_one(new_book.to_dict())
                             book_collection.delete_one({"ID": current_book["ID"]})
                         else:
-                            # image.name = change_image_name(image, book_id)
-
-                            # MAKE SURE TO DELETE PREVIOUS IMAGE FIRST (if book image was changed)
-                            # handle_uploaded_image(image)
-                            # delete_image(current_book["Book Image"])
-
                             new_genre = str(genre).split(",")
+                            
+                            #Handle image storage in S3 bucket 
+                            image_url, image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
 
                             new_book = Book(book_id, name, description, isbn, page_count,
                                             issued_out, author, year, quantity, series,
-                                            name_of_series, pos_in_series, new_genre)
+                                            name_of_series, pos_in_series, new_genre, [image_url, image_path], None, current_book["Issuees"])
                             book_collection.insert_one(new_book.to_dict())
                             book_collection.delete_one({"ID": current_book["ID"]})
 
@@ -354,6 +342,43 @@ def edit_book(request, book):
         messages.error(request, "You must be logged in to view that page...")
         return redirect("login")
     
+def edit_book_image(request, book):
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email})
+
+        if user and user["Is Staff"] == True:
+            curr_book = book_collection.find_one({"Slug": book})
+            if curr_book is not None:
+                #current_book exists in database: mongoDB
+                form = EditImageForm(request.POST or None)
+                if form.is_valid():
+                    image = request.FILES["image"]
+                    delete_image(curr_book["Book Image"][1])
+
+                    # Adjust uploaded image's name to feet book's ID
+                    image.name = change_image_name(image, curr_book["ID"])
+                    image_url, image_path = handle_uploaded_image(image)
+
+                    book_collection.update_one({"ID": curr_book["ID"]}, {
+                        "$set": {"Book Image": [image_url, image_path]}
+                    })
+
+                    messages.success(request, "You have successfully updated the book.")
+                    return redirect("book", slug = curr_book["Slug"])
+                
+                return render(request, "edit_book_image.html", {"form": form})
+            else:
+                #book does not exist. Get out of here
+                messages.info(request, "Book does not exist. Add book to database.")
+                return redirect("add_book")
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.error(request, "You must be logged in to view that page!")
+        return redirect("login")
+
 def delete_book(request, book):
     if request.user.is_authenticated:
         #check if user is staff from MongoDB
@@ -362,7 +387,7 @@ def delete_book(request, book):
         if user is not None and user["Is Staff"] == True:
             curr_book = book_collection.find_one({"Slug": book})
             if curr_book is not None:
-                delete_image(curr_book["Book Image"])
+                delete_image(curr_book["Book Image"][1])
 
             book_collection.delete_one({"Slug": book})
             messages.success(request, "You have successfully deleted the book.")
