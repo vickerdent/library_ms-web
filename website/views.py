@@ -210,7 +210,7 @@ def add_book(request, dname=None, dauthor=None):
                     book_requests_collection.delete_one({"name": dname, "author": dauthor})
 
                 messages.success(request, "You have successfully added a book.")
-                return redirect("book", slug = slugify(new_book.name))
+                return redirect("book", book = slugify(new_book.name))
             
             return render(request, "add_book.html", {"form": form, "staff": True})
         else:
@@ -326,10 +326,10 @@ def edit_book(request, book):
                             book_collection.delete_one({"ID": current_book["ID"]})
 
                             messages.success(request, "You have successfully updated the book.")
-                            return redirect("book", slug = slugify(new_book.name))
+                            return redirect("book", book = slugify(new_book.name))
                     
                     messages.success(request, "You have successfully updated the book.")
-                    return redirect("book", slug = new_slug)
+                    return redirect("book", book = new_slug)
                 return render(request, "edit_book.html", {"form": form, "staff": True})
             else:
                 #book does not exist. Get out of here
@@ -351,12 +351,12 @@ def edit_book_image(request, book):
             curr_book = book_collection.find_one({"Slug": book})
             if curr_book is not None:
                 #current_book exists in database: mongoDB
-                form = EditImageForm(request.POST or None)
+                form = EditImageForm(request.POST or None, request.FILES or None)
                 if form.is_valid():
                     image = request.FILES["image"]
                     delete_image(curr_book["Book Image"][1])
 
-                    # Adjust uploaded image's name to feet book's ID
+                    # Adjust uploaded image's name to fit book's ID
                     image.name = change_image_name(image, curr_book["ID"])
                     image_url, image_path = handle_uploaded_image(image)
 
@@ -365,9 +365,9 @@ def edit_book_image(request, book):
                     })
 
                     messages.success(request, "You have successfully updated the book.")
-                    return redirect("book", slug = curr_book["Slug"])
+                    return redirect("book", book = curr_book["Slug"])
                 
-                return render(request, "edit_book_image.html", {"form": form})
+                return render(request, "edit_book_image.html", {"form": form, "staff": True})
             else:
                 #book does not exist. Get out of here
                 messages.info(request, "Book does not exist. Add book to database.")

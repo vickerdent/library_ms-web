@@ -183,7 +183,7 @@ class EditBookForm(forms.Form):
         return data
 
 class EditImageForm(forms.Form):
-    """Create form to edit images for books """
+    """Form to edit images for books """
     image = forms.ImageField(required=True, widget=forms.widgets.ClearableFileInput(
         attrs={"placeholder":"", "class":"form-control"}), label="Image")
 
