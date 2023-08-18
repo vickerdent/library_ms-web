@@ -71,13 +71,12 @@ def handle_uploaded_image(image):
     media_storage = MediaStorage()
 
     media_storage.save(file_path_in_bucket, image)
-    image_url = media_storage.url(file_path_in_bucket)
 
     # For development purposes only
     # with open("media/book_images/" + image.name, "wb+") as destination:
     #     for chunk in image.chunks():
     #         destination.write(chunk)
-    return image_url, file_path_in_bucket
+    return file_path_in_bucket
 
 def edit_image_in_bucket(file_path, book_id):
 
@@ -103,9 +102,7 @@ def edit_image_in_bucket(file_path, book_id):
         new_file_path = os.path.join(directory, new_image)
         media_storage.save(new_file_path, the_image)
 
-        image_url = media_storage.url(new_file_path)
-
-        return image_url, new_file_path
+        return new_file_path
 
 
 def change_image_name(image, book_id):

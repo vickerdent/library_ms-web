@@ -28,6 +28,10 @@
                 <td>Not Returned</td>
               {% endif %}
             </tr>
+            {% empty %}
+            <tr>
+              No books borrowed or returned yet. <a href="{% url 'home' %}">Borrow</a> some books to see them here.
+            </tr>
             {% endfor %}
           </tbody>
     </table>
