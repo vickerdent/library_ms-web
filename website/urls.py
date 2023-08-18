@@ -19,4 +19,6 @@ urlpatterns = [
     path('process_return/<str:book>', views.process_return, name='process_return'),
     path('requested_books/', views.requested_books, name='requested_books'),
     path('delete_request/<str:dname>/<str:dauthor>', views.delete_request, name='delete_request'),
+    path('confirm_code/', views.confirm_code, name='confirm_code'),
+    path('resend_code/', views.resend_code, name='resend_code'),
 ]

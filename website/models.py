@@ -154,10 +154,11 @@ class Person:
     """Class handling the definition of who a person is
         to the web application"""
     
-    __slots__ = ("username", "first_name", "last_name", "email", "address", "state", "is_admin", "is_staff")
+    __slots__ = ("username", "first_name", "last_name", "email", "address", "state", 
+                 "registered", "is_admin", "is_staff")
 
     def __init__(self, username: str, first_name: str, last_name: str, email: str, 
-                 address: str, state: str, is_admin=False, is_staff=False):
+                 address: str, state: str, registered=False, is_admin=False, is_staff=False):
         self.username = username
         self.first_name = first_name
         self.last_name = last_name
@@ -166,6 +167,7 @@ class Person:
         self.state = state
         self.is_admin = is_admin
         self.is_staff = is_staff
+        self.registered = registered
 
     def to_dict(self) -> dict:
         """ Converts the class's into a dictionary """
@@ -176,6 +178,7 @@ class Person:
             "Email": self.email,
             "Address": self.address,
             "State": self.state,
+            "registered": self.registered,
             "Is Admin": self.is_admin,
             "Is Staff": self.is_staff
         }

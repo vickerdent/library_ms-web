@@ -4,10 +4,11 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils.text import slugify
 from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestABookForm, \
-    EditImageForm
-from utils import book_collection, user_collection, pymongo, \
-    book_requests_collection, handle_uploaded_image, delete_image, change_image_name, \
-    borrowed_collection, calculate_return, return_status, correct_id, edit_image_in_bucket
+    EditImageForm, ConfirmCodeForm
+from utils import book_collection, user_collection, pymongo, reg_accounts_collection, \
+    book_requests_collection, borrowed_collection, return_status, send_email_code
+from .o_functions import handle_uploaded_image, delete_image, change_image_name, \
+    calculate_return, correct_id, edit_image_in_bucket
 from .models import Book, Person, RequestABook, BorrowedBook, BorrowedBookInstance
 from datetime import datetime
 
@@ -37,9 +38,11 @@ def home(request):
         all_books = ["No Connection to Database Server", "Try again in a short while."]
 
     if request.user.is_authenticated:
-        #check if user is staff from MongoDB
-        user = user_collection.find_one({"Email": request.user.email})
-        if user and user["Is Staff"] == True:
+        #check if user is confirmed and is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email, "registered": True})
+        if not user:
+            return redirect("confirm_code")
+        elif user and user["Is Staff"] == True:
             return render(request, "home.html", {"books": all_books, "staff": True})
 
     return render(request, "home.html", {"books": all_books, "staff": False})
@@ -73,8 +76,7 @@ def sign_up(request):
             email = form.cleaned_data.get("email") # get email from form
             if User.objects.filter(email=email).exists():
                 messages.error(request, "Email already exists! Email must be unique!")
-                return redirect("register")
-            form.save()
+                return render(request, "signup.html", {"form": form})
 
             # Add user to MongoDB
             username = form.cleaned_data["username"]
@@ -88,16 +90,18 @@ def sign_up(request):
 
             user_collection.insert_one(new_user.to_dict())
 
+            form.save()
+            # Send Confirmation code to user
+            send_email_code(email)
+            
             # Authenticate and login user
             user = authenticate(username=username, password=password)
             login(request, user)
             messages.success(request, "You have signed up and logged in successfully.")
-            return redirect("home")
+            return redirect("confirm_code")
     else:
         form = SignUpForm()
         return render(request, "signup.html", {"form": form})
-    
-    return render(request, "signup.html", {"form": form})
 
 def book_details(request, book):
     return_status()
@@ -452,7 +456,7 @@ def history(request):
                 super_list.append(book)
         return render(request, "history.html", {"books": super_list})
     else:
-        messages.info(request, "You must be logged in to delete a book!")
+        messages.info(request, "You must be logged in to view this page!")
         return redirect("login")
 
 def return_book(request):
@@ -500,3 +504,45 @@ def requested_books(request):
             all_books = list(book_requests_collection.find())
 
             return render(request, "requested_books.html", {"books": all_books,"staff": True})
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.info(request, "You must be logged in view this page!")
+        return redirect("login")
+        
+def confirm_code(request):
+    # check that user is logged in
+    if request.user.is_authenticated:
+        if user_collection.find_one({"Email": request.user.email, "registered": True}):
+            messages.info(request, "Account is already confirmed.")
+            return redirect("home")
+        
+        form = ConfirmCodeForm(request.POST or None)
+        if form.is_valid():
+            code = form.cleaned_data["code"]
+            new_user = reg_accounts_collection.find_one({"email": request.user.email})
+            if new_user and code == new_user["passcode"]:
+                user_collection.update_one({"Email": request.user.email}, 
+                                           {"$set": {"registered": True}})
+                return redirect("home")
+            else:
+                messages.error(request, "Confirmation code is incorrect!")
+                return render(request, "confirm_code.html", {"form": form})
+        return render(request, "confirm_code.html", {"form": form})
+    else:
+        messages.info(request, "You must be logged in view this page!")
+        return redirect("login")
+    
+def resend_code(request):
+    # check that user is logged in
+    if request.user.is_authenticated:
+        if user_collection.find_one({"Email": request.user.email, "registered": True}):
+            messages.info(request, "Account is already confirmed.")
+            return redirect("home")
+        reg_accounts_collection.delete_one({"email": request.user.email})
+        send_email_code(request.user.email)
+        return redirect("confirm_code")
+    else:
+        messages.info(request, "You must be logged in to do this!")
+        return redirect("login")

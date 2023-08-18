@@ -1,8 +1,9 @@
-import pymongo, os
+import pymongo, os, ssl, smtplib
 from pymongo.server_api import ServerApi
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from website.custom_storage import MediaStorage
+from email.message import EmailMessage
+from website.o_functions import code_generator
 
 load_dotenv()
 
@@ -14,87 +15,7 @@ book_collection = database["dBooks"]
 user_collection = database["Users"]
 borrowed_collection = database["BorrowedBooks"]
 book_requests_collection = database["Book_Requests"]
-
-def delete_image(file_path):
-    """Delete Previous Image from storage"""
-
-    # instantiate storage class to use
-    prev_img = MediaStorage()
-    
-    # check functions before usage
-    if prev_img.exists(file_path):
-        prev_img.delete(file_path)
-
-def handle_uploaded_image(image):
-    """Upload image to storage S3 bucket"""
-    # Set file directory you want to save files to
-    file_directory_in_bucket = "media/book_images"
-
-    # Synthesize (create) full file path, including filename
-    file_path_in_bucket = os.path.join(file_directory_in_bucket, image.name)
-
-    # Instantiate bucket
-    media_storage = MediaStorage()
-
-    media_storage.save(file_path_in_bucket, image)
-    image_url = media_storage.url(file_path_in_bucket)
-
-    # For development purposes only
-    # with open("media/book_images/" + image.name, "wb+") as destination:
-    #     for chunk in image.chunks():
-    #         destination.write(chunk)
-    return image_url, file_path_in_bucket
-
-def edit_image_in_bucket(file_path, book_id):
-
-    """Function to edit the name of file inside an S3 bucket"""
-    media_storage = MediaStorage()
-
-    # Check to ensure image exists
-    if media_storage.exists(file_path):
-        # Get the file object
-        the_image = media_storage.open(file_path, mode='rb')
-        slash = file_path.rfind("/")
-
-        # determine the directory of file
-        directory = file_path[:slash]
-
-        # Change name of file
-        curr_image = file_path[slash+1:]
-        image_dot = curr_image.rfind(".")
-        image_ext = curr_image[image_dot:]
-        new_image = book_id + image_ext
-
-        # Create file path with new name and save new image with new file_path
-        new_file_path = os.path.join(directory, new_image)
-        media_storage.save(new_file_path, the_image)
-
-        image_url = media_storage.url(new_file_path)
-
-        return image_url, new_file_path
-
-
-def change_image_name(image, book_id):
-    image_dot = str(image.name).rfind(".")
-    
-    # Include the dot, and give the whole extension
-    image_ext = image.name[image_dot:]
-    return str(book_id) + str(image_ext)
-
-def correct_id(name) -> str:
-    """ Used to introduce correct
-        IDs for books"""
-    the_index = 0
-    new_input = str(name).strip()
-    d_id = new_input[the_index]
-    while the_index < len(new_input):
-        if new_input[the_index] == ' ':
-            the_index += 1
-            d_id += new_input[the_index]
-            continue
-        the_index += 1
-    return d_id
-
+reg_accounts_collection = database["RegisteredAccounts"]
 
 # first = book_collection.create_index([("ID", pymongo.ASCENDING)], unique=True)
 
@@ -116,25 +37,31 @@ def return_status():
             book_collection.update_one({"ID": item["book_id"]},
                                        {"$pull": {"Issuees": item["email"]}})
 
-def calculate_return(duration):
-    """Calculate return date
-    for borrowed book for a user"""
-    today = datetime.now()
-    return_date = today
-    if duration == "1 Day":
-        return_date = today + timedelta(days=1)
-    elif duration == "3 Days":
-        return_date = today + timedelta(days=3)
-    elif duration == "1 Week":
-        return_date = today + timedelta(weeks=1)
-    elif duration == "3 Weeks":
-        return_date = today + timedelta(weeks=3)
-    return return_date
+def send_email_code(receiver: str):
+    email_sender = os.getenv("EMAIL_SENDER" )
+    email_password = os.getenv("EMAIL_PASSWORD")
+    code = code_generator()
+
+    subject = "Confirm Your Account on Library_MS"
+    body = f"""
+        Here is your one-time passcode: {code}
+        This code will expire in 59 minutes.
 
 
-# dbx = dropbox.Dropbox(os.getenv("DROPBOX_ACCESS_TOKEN"))
 
-# user = dbx.users_get_current_account()
-# for entry in dbx.files_list_folder("").entries:
-#     print(entry.name)
+        Got any problem? Simply reply us
+        """
+    # Run Mongo_DB Code Here
+    reg_accounts_collection.insert_one({"email": receiver, "passcode": code})
 
+    msg = EmailMessage()
+    msg["From"]  = email_sender
+    msg["To"] = receiver
+    msg["Subject"] = subject
+    msg.set_content(body)
+
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+        smtp.login(email_sender, email_password)
+        smtp.sendmail(email_sender, receiver, msg.as_string())

@@ -186,6 +186,11 @@ class EditImageForm(forms.Form):
     """Form to edit images for books """
     image = forms.ImageField(required=True, widget=forms.widgets.ClearableFileInput(
         attrs={"placeholder":"", "class":"form-control"}), label="Image")
+    
+class ConfirmCodeForm(forms.Form):
+    """Form to confirm code sent to new users """
+    code = forms.CharField(required=True, max_length=12, widget=forms.widgets.TextInput(
+        attrs={"placeholder":"", "class":"form-control"}), label="Enter Confirmation Code")
 
 class BorrowBookForm(forms.Form):
     """Create form for borrowing books """
