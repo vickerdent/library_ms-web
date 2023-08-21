@@ -16,6 +16,10 @@
                 Return Book</a>
             </td>
         </tr>
+        {% empty %}
+        <tr>
+            No books to return. <a href="{% url 'home' %}">Borrow</a> some books to see them here.
+        </tr>
         {% endfor %}
         </tbody>
     </table>

@@ -1,6 +1,5 @@
 from django.utils.text import slugify
 from datetime import datetime
-from .custom_storage import MediaStorage
 
 # Create your models here.
 class Book:
@@ -8,13 +7,13 @@ class Book:
     from MongoDB within the application"""
 
     __slots__ = ("book_id", "name", "description", "isbn", "page_count", "issued_out", 
-                 "author", "year", "issuees", "image", "image_path", "quantity", "slug", "series",
+                 "author", "year", "issuees", "image", "quantity", "slug", "series",
                  "name_of_series", "pos_in_series", "genre")
     
     def __init__(self, book_id: str, name: str, description: str, isbn: str, page_count: int,
                  issued_out: bool, author: str, year: str, quantity: int=0,
                  series: bool=False, name_of_series: str="", pos_in_series: int=None,
-                 genre: list=[], image: str="", slug=None, issuees: list=[]):
+                 genre: list=[], image: list=[], slug=None, issuees: list=[]):
         self.book_id = book_id
         self.name = name
         self.description = description
@@ -24,12 +23,7 @@ class Book:
         self.author = author
         self.year = year
         self.issuees = issuees
-        
-        # Instantiate storage to bucket
-        media_storage = MediaStorage()
-
-        self.image = media_storage.url(image)
-        self.image_path = image
+        self.image = image
         self.quantity = quantity
         self.slug = slug
         self.series = series
@@ -50,7 +44,7 @@ class Book:
                 "Issued Out": self.issued_out,
                 "Author": self.author,
                 "Year Published": self.year,
-                "Book Image": self.image_path,
+                "Book Image": self.image,
                 "Quantity": self.quantity,
                 "Genre": self.genre,
                 "Slug": slugify(self.name),
@@ -69,7 +63,7 @@ class Book:
                 "Issued Out": self.issued_out,
                 "Author": self.author,
                 "Year Published": self.year,
-                "Book Image": self.image_path,
+                "Book Image": self.image,
                 "Quantity": self.quantity,
                 "Genre": self.genre,
                 "Slug": self.slug,

@@ -199,7 +199,7 @@ def add_book(request, dname=None, dauthor=None):
 
                 image.name = change_image_name(image, book_id)
 
-                image_path = handle_uploaded_image(image)
+                image_url, image_path = handle_uploaded_image(image)
 
                 new_genre = str(genre).split(", ")
                 if form.cleaned_data["series"] == "True":
@@ -207,7 +207,7 @@ def add_book(request, dname=None, dauthor=None):
 
                 new_book = Book(book_id, name, description, isbn, page_count, issued_out, author,
                                 year, quantity, series, name_of_series, pos_in_series, 
-                                new_genre, image_path)
+                                new_genre, [image_url, image_path])
                 
                 book_collection.insert_one(new_book.to_dict())
                 if initial and dname and dauthor:
@@ -310,23 +310,25 @@ def edit_book(request, book):
                             new_slug += str(len(list(book_collection.find({"Slug": current_book["Slug"]}, {"ID": 1}))) + 1)
                             
                             # Edit book image in file storage to equate book_id
-                            image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
+                            # Check parameters if change is needed, else you're done for
+                            # Note that function can return None
+                            image_url, image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
 
                             new_book = Book(book_id, name, description, isbn, page_count, issued_out,
                                             author, year, quantity, series, name_of_series, pos_in_series, 
-                                            new_genre, image_path, new_slug, current_book["Issuees"])
+                                            new_genre, [image_url, image_path], new_slug, current_book["Issuees"])
                             book_collection.insert_one(new_book.to_dict())
                             book_collection.delete_one({"ID": current_book["ID"]})
                         else:
                             new_genre = str(genre).split(",")
                             
                             #Handle image storage in S3 bucket 
-                            image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
+                            image_url, image_path = edit_image_in_bucket(current_book["Image"][1], book_id)
 
                             new_book = Book(book_id, name, description, isbn, page_count,
                                             issued_out, author, year, quantity, series,
                                             name_of_series, pos_in_series, new_genre,
-                                            image_path, None, current_book["Issuees"])
+                                            [image_url, image_path], None, current_book["Issuees"])
                             book_collection.insert_one(new_book.to_dict())
                             book_collection.delete_one({"ID": current_book["ID"]})
 
@@ -363,10 +365,10 @@ def edit_book_image(request, book):
 
                     # Adjust uploaded image's name to fit book's ID
                     image.name = change_image_name(image, curr_book["ID"])
-                    image_path = handle_uploaded_image(image)
+                    image_url, image_path = handle_uploaded_image(image)
 
                     book_collection.update_one({"ID": curr_book["ID"]}, {
-                        "$set": {"Book Image": image_path}
+                        "$set": {"Book Image": [image_url, image_path]}
                     })
 
                     messages.success(request, "You have successfully updated the book.")

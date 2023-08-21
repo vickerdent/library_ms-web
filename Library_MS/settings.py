@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,13 +33,14 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 
 INSTALLED_APPS = [
+    'website',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'website',
+    'django_backblaze_b2',
 ]
 
 MIDDLEWARE = [
@@ -80,12 +82,8 @@ WSGI_APPLICATION = 'Library_MS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': os.getenv("PG_USER"),
-        'PASSWORD': os.getenv("PG_PASSWORD"),
-        'HOST': 'library-project.cjblnlmu8xen.eu-north-1.rds.amazonaws.com',
-        'PORT': '5432'
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -128,16 +126,20 @@ STATIC_ROOT = BASE_DIR / 'static'
 
 STATIC_URL = 'static/'
 
-STATICFILES_DIRS = [
-    BASE_DIR / "otherstaticfiles",
-]
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    "django-backblaze-b2": {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_backblaze_b2_cache_table',
+    }
+}
 
+BACKBLAZE_CONFIG = {
+    # however you want to securely retrieve these values
+    "application_key_id": os.getenv("BACKBLAZE_KEY_ID"),
+    "application_key": os.getenv("BACKBLAZE_KEY"),
+}
 
-# Storages
-STORAGES = {
-            "default": {"BACKEND": "website.custom_storage.MediaStorage"},
-            "staticfiles": {"BACKEND": "website.custom_storage.StaticStorage"}
-            }
 # DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 # DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
 # DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
