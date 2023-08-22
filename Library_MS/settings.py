@@ -88,11 +88,18 @@ WSGI_APPLICATION = 'Library_MS.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+user = os.getenv("PG_USER")
+password = os.getenv("PG_PASSWORD")
+host = os.getenv("PG_HOST")
+
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': user,
+        'USER': user,
+        'PASSWORD': password,
+        'HOST': host,
     }
 }
 
@@ -139,10 +146,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    "django-backblaze-b2": {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'django_backblaze_b2_cache_table',
-    }
+    "django-backblaze-b2": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
 }
 
 BACKBLAZE_CONFIG = {
