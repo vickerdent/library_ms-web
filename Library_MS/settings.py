@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,14 +22,21 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-load_dotenv()
+# SECURITY WARNING: don't run with debug turned on in production!
+
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", False)
 
 ALLOWED_HOSTS = ["*"]
 
+CSRF_COOKIE_SECURE = False
+
+SECURE_SSL_REDIRECT = False
+
+SECURE_HSTS_SECONDS = 0 # Set to 31536000 (1 year)
+
+SESSION_COOKIE_SECURE = False
 
 # Application definition
 
@@ -39,14 +47,15 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "whitenoise.runserver_nostatic",
     'django.contrib.staticfiles',
     'django_backblaze_b2',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -126,6 +135,8 @@ STATIC_ROOT = BASE_DIR / 'static'
 
 STATIC_URL = 'static/'
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
     "django-backblaze-b2": {
@@ -136,10 +147,12 @@ CACHES = {
 
 BACKBLAZE_CONFIG = {
     # however you want to securely retrieve these values
-    "application_key_id": os.getenv("BACKBLAZE_KEY_ID"),
-    "application_key": os.getenv("BACKBLAZE_KEY"),
+    "application_key_id": os.getenv("BACKBLAZE_APPLICATION_KEY_ID"),
+    "application_key": os.getenv("BACKBLAZE_APPLICATION_KEY"),
+    "bucket": os.getenv("BACKBLAZE_BUCKET"),
 }
 
+# For Dropbox
 # DROPBOX_OAUTH2_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")
 # DROPBOX_APP_KEY = os.getenv("DROPBOX_APP_KEY")
 # DROPBOX_APP_SECRET = os.getenv("DROPBOX_APP_SECRET")
@@ -148,10 +161,9 @@ BACKBLAZE_CONFIG = {
 # DROPBOX_TIMEOUT = 100
 # DROPBOX_WRITE_MODE = "add"
 
-AWS_S3_REGION_NAME = "us-east-005"
-AWS_S3_ENDPOINT_URL = "https://s3.us-east-005.backblazeb2.com"
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+# For Backblaze (with S3 compatibility)
+# AWS_S3_REGION_NAME = "us-east-005"
+# AWS_S3_ENDPOINT_URL = "https://s3.us-east-005.backblazeb2.com"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

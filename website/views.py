@@ -361,7 +361,7 @@ def edit_book_image(request, book):
                 form = EditImageForm(request.POST or None, request.FILES or None)
                 if form.is_valid():
                     image = request.FILES["image"]
-                    delete_image(curr_book["Book Image"][1])
+                    # delete_image(curr_book["Book Image"][1])
 
                     # Adjust uploaded image's name to fit book's ID
                     image.name = change_image_name(image, curr_book["ID"])
@@ -430,12 +430,13 @@ def request_book(request):
         for book in list(book_collection.find()):
             if str(book["Name"]).lower() == new_request.name.lower():
                 messages.info(request, "Book already exists!")
-                return redirect("request_book")
+                return render(request, "request_book.html", {"form": form})
             
         for book in list(book_requests_collection.find()):
             if str(book["name"]).lower() == new_request.name.lower():
                 messages.info(request, "Book already requested and in process!")
-                return redirect("request_book")
+                return render(request, "request_book.html", {"form": form})
+            
         book_requests_collection.insert_one(new_request.to_dict())
         messages.success(request, "You have successfully requested the book.")
         return redirect("home")
