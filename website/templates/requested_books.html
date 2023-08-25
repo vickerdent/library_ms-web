@@ -10,15 +10,17 @@
     <table class="table">
         <tbody>
         {% for book in books %}
-        <tr>
-            <td>{{ book.name }} - {{ book.author }}</td>
-            <td><a href="{% url 'add_a_book' book.name book.author %}" class="btn btn-secondary">
-                Add Book</a>
-            </td>
-            <td><a href="{% url 'delete_request' book.name book.author %}" class="btn btn-danger">
-                Delete Entry</a>
-            </td>
-        </tr>
+            <tr>
+                <td>{{ book.name }} - {{ book.author }}</td>
+                <td><a href="{% url 'add_a_book' book.name book.author %}" class="btn btn-secondary">
+                    Add Book</a>
+                </td>
+                <td><a href="{% url 'delete_request' book.name book.author %}" class="btn btn-danger">
+                    Delete Entry</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr>No books have been requested yet.</tr>
         {% endfor %}
         </tbody>
     </table>

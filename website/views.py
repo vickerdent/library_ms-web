@@ -71,13 +71,13 @@ def search(request):
                                 book["Name Of Series"], book["Position In Series"], book["Genre"],
                                 book["Book Image"], book["Slug"], book["Issuees"])
                 all_books.append(one_book)
-            else:
-                one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
-                                    book["Page Count"], book["Issued Out"], book["Author"],
-                                    book["Year Published"], book["Quantity"], book["Part Of A Series"],
-                                    book["Name Of Series"], book["Position In Series"], book["Genre"],
-                                    book["Book Image"], book["Slug"], book["Issuees"])
-                all_books.append(one_book)
+        else:
+            one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                                book["Page Count"], book["Issued Out"], book["Author"],
+                                book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                                book["Name Of Series"], book["Position In Series"], book["Genre"],
+                                book["Book Image"], book["Slug"], book["Issuees"])
+            all_books.append(one_book)
 
     if request.user.is_authenticated:
         #check if user is confirmed and is staff from MongoDB
@@ -590,3 +590,89 @@ def resend_code(request):
     else:
         messages.info(request, "You must be logged in to do this!")
         return redirect("login")
+
+def staff(request):
+    # check that user is logged in
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email})
+
+        if user and user["Is Staff"] == True:
+            # proceed if user is a staff member
+
+            non_staff = []
+            all_staff = []
+            
+            not_staff = list(user_collection.find({"Is Staff": False}))
+            a_staff = list(user_collection.find({"Is Staff": True}))
+
+            for staff in a_staff:
+                all_staff.append(Person(staff["Username"], staff["First Name"], staff["Last Name"], staff["Email"],
+                                        staff["Address"], staff["State"], staff["registered"], staff["Is Admin"],
+                                        staff["Is Staff"]))
+            
+            for staff in not_staff:
+                non_staff.append(Person(staff["Username"], staff["First Name"], staff["Last Name"], staff["Email"],
+                                        staff["Address"], staff["State"], staff["registered"], staff["Is Admin"],
+                                        staff["Is Staff"]))
+
+            return render(request, "staff.html", {"non_staff": non_staff, "all_staff": all_staff, "staff": True})
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.info(request, "You must be logged in view this page!")
+        return redirect("login")
+    
+def add_staff(request, username):
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+
+        user = user_collection.find_one({"Email": request.user.email})
+        if user and user["Is Staff"] == True:
+            # proceed if user is a staff member
+
+            mold = user_collection.find_one({"Username": username})
+            if mold and not mold["Is Staff"]:
+                user_collection.update_one(
+                    {"Username": username},
+                    {"$set": {"Is Staff": True}}
+                )
+                messages.info(request, "User has been added to staff successfully!")
+                return redirect("staff")
+            else:
+                messages.info(request, "User does not exist!")
+                return redirect("staff")
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.info(request, "You must be logged in view this page!")
+        return redirect("login")
+    
+def remove_staff(request, username):
+    if request.user.is_authenticated:
+        #check if user is staff from MongoDB
+
+        user = user_collection.find_one({"Email": request.user.email})
+        if user and user["Is Staff"] == True:
+            # proceed if user is a staff member
+
+            mold = user_collection.find_one({"Username": username})
+            if mold and mold["Is Staff"]:
+                user_collection.update_one(
+                    {"Username": username},
+                    {"$set": {"Is Staff": False}}
+                )
+                messages.info(request, "User has been removed from staff successfully!")
+                return redirect("staff")
+            else:
+                messages.info(request, "User does not exist!")
+                return redirect("staff")
+        else:
+            messages.info(request, "You are not a staff! Reach out to a staff for help on this issue.")
+            return redirect("home")
+    else:
+        messages.info(request, "You must be logged in view this page!")
+        return redirect("login")
+

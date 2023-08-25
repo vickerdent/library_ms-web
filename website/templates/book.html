@@ -39,7 +39,7 @@
             <a href="{% url 'edit_book_image' book.slug %}" class="btn btn-secondary">Edit Book's Image</a> <br> <br>
             <a href="{% url 'delete_book' book.slug %}" class="btn btn-danger">Delete Book</a>
         {% elif user.email not in book.issuees %}
-            <a href="{% url 'home' %}" class="btn btn-secondary">Back</a> <br>
+            <a href="{% url 'home' %}" class="btn btn-secondary">Back</a> <br> <br>
             <a href="{% url 'borrow' book.slug %}" class="btn btn-secondary">Borrow Book</a>
         {% else %}
             <a href="http://" target="_blank" rel="noopener noreferrer"></a>

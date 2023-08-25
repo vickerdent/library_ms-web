@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %} Requested Books {% endblock %}
+
+<!-- Continue here -->
+{% block content%}
+<div class="col-md-10 offset-md-1">
+    <h1>Staff Management</h1>
+    <br>
+    <!-- Button calls dialog -->
+    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addStaff">
+        Add Staff Members
+    </button>
+
+    <!-- Dialog -->
+    <div class="modal fade" id="addStaff" tabindex="-1" aria-labelledby="addStaffLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addStaffLabel">Add Staff Members</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <table class="table">
+                        <tbody>
+                        {% for staff in non_staff %}
+                            {% if staff.registered %}
+                            <tr>
+                                <td><b>{{ staff }}</b>  ({{ staff.username }})</td>
+                                <td><a href="{% url 'add_staff' staff.username %}" class="btn btn-secondary">
+                                    Add to Staff</a>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        {% empty %}
+                            <tr>
+                                No staff available. Add one to see him/her here.
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Continue here -->
+    <br>
+    <br>
+    <h3>All Staff</h3>
+    <table class="table">
+        <tbody>
+            {% for staff in all_staff %}
+            <tr>
+                <td><b>{{ staff }}</b>  ({{ staff.username }})</td>
+                {% if not staff.is_admin %}
+                <td><a href="{% url 'remove_staff' staff.username %}" class="btn btn-danger">
+                    Remove from Staff</a>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                No staff available. Add one to see him/her here.
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

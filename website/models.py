@@ -181,6 +181,9 @@ class Person:
         }
         return diction
     
+    def __str__(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+    
 class BorrowedBook:
     """Class to handle the borrowing of books
     to and from the web application"""
