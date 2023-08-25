@@ -7,8 +7,8 @@ from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestAB
     EditImageForm, ConfirmCodeForm
 from utils import book_collection, user_collection, pymongo, reg_accounts_collection, \
     book_requests_collection, borrowed_collection, return_status, send_email_code
-from .o_functions import handle_uploaded_image, delete_image, change_image_name, \
-    calculate_return, correct_id, edit_image_in_bucket
+from .o_functions import change_image_name, calculate_return, correct_id
+from .custom_storage import handle_uploaded_image, delete_image, edit_image_in_bucket
 from .models import Book, Person, RequestABook, BorrowedBook, BorrowedBookInstance
 from datetime import datetime
 
@@ -46,6 +46,46 @@ def home(request):
             return render(request, "home.html", {"books": all_books, "staff": True})
 
     return render(request, "home.html", {"books": all_books, "staff": False})
+
+def search(request):
+    all_books = []
+    search_term = request.GET["search_term"]
+    lookup_books = list(book_collection.aggregate([
+        {"$search": {
+            "index": "default",
+            "text": {
+                "query": search_term,
+                "path": {
+                    "wildcard": "*"
+                }
+            }
+        }}
+    ]))
+
+    for book in lookup_books:
+        if request.user.is_authenticated:
+            if request.user.email not in book["Issuees"]:
+                one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                                book["Page Count"], book["Issued Out"], book["Author"],
+                                book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                                book["Name Of Series"], book["Position In Series"], book["Genre"],
+                                book["Book Image"], book["Slug"], book["Issuees"])
+                all_books.append(one_book)
+            else:
+                one_book = Book(book["ID"], book["Name"], book["Description"], book["ISBN"],
+                                    book["Page Count"], book["Issued Out"], book["Author"],
+                                    book["Year Published"], book["Quantity"], book["Part Of A Series"],
+                                    book["Name Of Series"], book["Position In Series"], book["Genre"],
+                                    book["Book Image"], book["Slug"], book["Issuees"])
+                all_books.append(one_book)
+
+    if request.user.is_authenticated:
+        #check if user is confirmed and is staff from MongoDB
+        user = user_collection.find_one({"Email": request.user.email})
+        if user and user["Is Staff"] == True:
+            return render(request, "search.html", {"books": all_books, "staff": True, "search": search_term})
+        
+    return render(request, "search.html", {"books": all_books, "staff": False, "search": search_term})
 
 def login_user(request):
     # check if login attempt or normal request
@@ -361,7 +401,7 @@ def edit_book_image(request, book):
                 form = EditImageForm(request.POST or None, request.FILES or None)
                 if form.is_valid():
                     image = request.FILES["image"]
-                    # delete_image(curr_book["Book Image"][1])
+                    delete_image(curr_book["Book Image"][1])
 
                     # Adjust uploaded image's name to fit book's ID
                     image.name = change_image_name(image, curr_book["ID"])

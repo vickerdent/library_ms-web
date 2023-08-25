@@ -70,9 +70,9 @@ class BookForm(forms.Form):
     series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, widget=forms.widgets.Select(
         attrs={"placeholder":"", "class":"form-select", "id": "aseries"}), label="Part Of A Series")
     name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(
-        attrs={"placeholder":"", "class":"form-control", "id": "nameseries", "style": "display: none"}), label="Name Of Series")
+        attrs={"placeholder":"", "class":"form-control", "id": "nameseries"}), label="Name Of Series")
     pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(
-        attrs={"placeholder":"", "class":"form-control", "id": "posseries", "style": "display: none"}), label="Position In Series")
+        attrs={"placeholder":"", "class":"form-control", "id": "posseries"}), label="Position In Series")
     genre = forms.CharField(required=True, widget=forms.widgets.Textarea(
         attrs={"placeholder":"", "class":"form-control"}), label="Genre",
                             help_text='<span class="form-text text-muted"><small>Separate each genre \
@@ -140,9 +140,9 @@ class EditBookForm(forms.Form):
     series = forms.ChoiceField(required=True, choices=YES_NO_CHOICES, widget=forms.widgets.Select(
         attrs={"placeholder":"", "class":"form-select", "id": "aseries"}), label="Part Of A Series")
     name_of_series = forms.CharField(required=False, widget=forms.widgets.TextInput(
-        attrs={"placeholder":"", "class":"form-control", "id": "nameseries", "style": "display: none"}), label="Name Of Series")
+        attrs={"placeholder":"", "class":"form-control", "id": "nameseries"}), label="Name Of Series")
     pos_in_series = forms.IntegerField(required=False, widget=forms.widgets.NumberInput(
-        attrs={"placeholder":"", "class":"form-control", "id": "posseries", "style": "display: none"}), label="Position In Series")
+        attrs={"placeholder":"", "class":"form-control", "id": "posseries"}), label="Position In Series")
     genre = forms.CharField(required=True, widget=forms.widgets.Textarea(
         attrs={"placeholder":"", "class":"form-control"}), label="Genre",
                             help_text='<span class="form-text text-muted"><small>Separate each genre \

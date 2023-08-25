@@ -12,18 +12,20 @@
 <br>
   <div class="row row-cols-1 row-cols-md-4 g-4">
     {% for book in books %}
-    <div class="col">
-      <a href="{% url 'book' book.slug %}">
-      <div class="card h-100">
-        <img src="{{ book.image.0 }}" class="card-img-top" alt="Book Image" width="50px">
-        <div class="card-body">
-          <h5 class="card-title">{{ book.name }}</h5>
-          <p class="card-text">{{ book.description|truncatewords:10 }}.</p>
-          <p class="card-text">{{ book.author }}.</p>
+      <div class="col">
+        <a href="{% url 'book' book.slug %}">
+        <div class="card h-100">
+          <img src="{{ book.image.0 }}" class="card-img-top" alt="Book Image" width="50px">
+          <div class="card-body">
+            <h5 class="card-title">{{ book.name }}</h5>
+            <p class="card-text">{{ book.description|truncatewords:10 }}.</p>
+            <p class="card-text">{{ book.author }}.</p>
+          </div>
         </div>
+        </a>
       </div>
-      </a>
-    </div>
+    {% empty %}
+      <div><p>No books found. Contact the site administrator for help.</p></div>
     {% endfor %}
   </div>
 {% endif %}
