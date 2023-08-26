@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils.text import slugify
+
 from .forms import SignUpForm, EditBookForm, BookForm, BorrowBookForm, RequestABookForm, \
     EditImageForm, ConfirmCodeForm
 from utils import book_collection, user_collection, pymongo, reg_accounts_collection, \

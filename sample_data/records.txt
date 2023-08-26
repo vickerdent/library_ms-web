@@ -1,0 +1,39 @@
+Name: Harry Potter and the Goblet of Fire
+Description: Harry Potter is forced to compete in a Triwizard Tournament, at great cost too.
+ISBN: 0-7475-4624-X
+Page Count: 636,
+Issued: false,
+Author: J. K. Rowling,
+Year: 2000
+
+Name: Harry Potter and the Order of the Phoenix
+Description": Harry Potter is still in school, and faces school problems all the same.
+ISBN: 0-7475-5100-6
+Page Count: 766
+Issued: false
+Author: J. K. Rowling
+Year: 2003
+
+Name: Harry Potter and the Half-Blood Prince
+Description: Harry Potter prepares for war against 'you know who'
+ISBN: 0-7475-8108-8
+Page Count: 607
+Issued: true
+Author: J. K. Rowling
+Year: 2005
+
+Name: Harry Potter and the Deathly Hallows
+Description: Harry's final confrontation with Lord Voldemort
+ISBN: 0-7475-9105-9
+Page Count: 607
+Issued: true
+Author: J. K. Rowling
+Year: 2007
+
+Name: Ready Player One
+Description: Protagonist Wade Watts plays a game to win money.
+ISBN: 978-1524763282
+Page Count": 374
+Issued: true,
+Author: Ernest Cline
+Year: 2011
