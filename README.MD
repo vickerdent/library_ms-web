@@ -17,7 +17,7 @@ To get this project up and running locally on your computer, after downloading:
     venv\Script\activate
     cd library_ms_web (the name of your folder) 
     ```
-1. Create accounts with aforementioned provides: MongoDB Atlas, ElephantSQL, Backblaze Cloud Storage. You can move to a higher tier, if you have the chop.
+1. Create accounts with aforementioned providers: MongoDB Atlas, ElephantSQL, Backblaze Cloud Storage and Google. You can move to a higher tier, if you have the chop.
 1. Create a .env file with the following keys and values for your accounts:
     ```
     MONGODB_URI=MongoDB Atlas URI to connect a database
