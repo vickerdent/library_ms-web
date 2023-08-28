@@ -677,3 +677,5 @@ def remove_staff(request, username):
         messages.info(request, "You must be logged in view this page!")
         return redirect("login")
 
+def privacy_policy(request):
+    return render(request, "privacy.html", {})

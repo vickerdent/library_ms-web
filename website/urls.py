@@ -25,4 +25,5 @@ urlpatterns = [
     path('delete_request/<str:dname>/<str:dauthor>', views.delete_request, name='delete_request'),
     path('confirm_code/', views.confirm_code, name='confirm_code'),
     path('resend_code/', views.resend_code, name='resend_code'),
+    path('privacy_policy/', views.privacy_policy, name='privacy_policy'),
 ]
