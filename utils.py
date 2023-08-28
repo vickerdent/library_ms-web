@@ -48,7 +48,6 @@ def send_email_code(receiver: str):
         This code will expire in 59 minutes.
 
 
-
         Got any problem? Simply reply us
         """
     # Run Mongo_DB Code Here
