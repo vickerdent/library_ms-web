@@ -104,11 +104,8 @@ host = os.getenv("PG_HOST")
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': user,
-        'USER': user,
-        'PASSWORD': password,
-        'HOST': host,
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -147,7 +144,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-#Just for pythonanywhere. For heroku and others, probably: STATIC_ROOT = BASE_DIR / 'static'
+# STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATIC_ROOT = '/var/www/vickerdent/static'
 
 STATIC_URL = 'static/'
