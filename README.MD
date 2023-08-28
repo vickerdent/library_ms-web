@@ -33,7 +33,7 @@ To get this project up and running locally on your computer, after downloading:
     PG_PASSWORD=Given at Elephant SQL
     PG_HOST=Referred to as 'Server' on Elephant SQL
     ```
-1. Assuming you have Python setup, run the following commands (if you're on Windows you may use `py` or `py -3` instead of `python` to start Python):
+1. Assuming you have Python setup, run the following commands (if you're on Windows you may use `py` or `py -3` instead of `python3` to start Python):
     ```
     pip3 install -r requirements.txt
     python3 manage.py makemigrations
