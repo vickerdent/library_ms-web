@@ -2,7 +2,6 @@ from typing import Any, Dict, Mapping, Optional, Type, Union
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django import forms
-from django.forms.utils import ErrorList
 
 class SignUpForm(UserCreationForm):
     """Enables users to sign up to the web app."""
