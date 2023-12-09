@@ -6,7 +6,7 @@ from email.message import EmailMessage
 from website.o_functions import code_generator
 
 load_dotenv()
-
+# Test
 uri = os.getenv("MONGODB_URI")
 
 client = pymongo.MongoClient(uri, server_api=ServerApi('1'))
