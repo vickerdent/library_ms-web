@@ -9,11 +9,12 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-import os, django_heroku
+import os, dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv()
 from django.core.management.utils import get_random_secret_key
+from decouple import Csv, config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = get_random_secret_key()
 
-DEBUG = os.environ.get("DEBUG", False)
+DEBUG = os.environ.get("DEBUG", True)
 
 ALLOWED_HOSTS = ["*"]
 
@@ -103,13 +104,10 @@ host = os.getenv("PG_HOST")
 
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': user,
-        'USER': user,
-        'PASSWORD': password,
-        'HOST': host,
-    }
+    "default": dj_database_url.config(
+        default=config("POSTGRES_URI", default="postgres://postgres:QwertyAsdf@127.0.0.1:5432/postgres"),
+        conn_max_age=600, conn_health_checks=True
+    )
 }
 
 
@@ -154,8 +152,6 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static'),)
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-django_heroku.settings(locals())
 
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
