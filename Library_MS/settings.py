@@ -101,15 +101,25 @@ WSGI_APPLICATION = 'Library_MS.wsgi.application'
 user = os.getenv("PG_USER")
 password = os.getenv("PG_PASSWORD")
 host = os.getenv("PG_HOST")
+db = os.getenv("PG_DB")
 
+# DATABASES = {
+#     "default": dj_database_url.config(
+#         default=config("POSTGRES_URI", default="postgres://postgres:QwertyAsdf@127.0.0.1:5432/postgres"),
+#         conn_max_age=600, conn_health_checks=True
+#     )
+# }
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=config("POSTGRES_URI", default="postgres://postgres:QwertyAsdf@127.0.0.1:5432/postgres"),
-        conn_max_age=600, conn_health_checks=True
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': db,
+        'USER': user,
+        'PASSWORD': password,
+        'HOST': host,
+        'PORT': '',
+    }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
